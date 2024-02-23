@@ -98,16 +98,59 @@ const deleteUser = async (req, res) => {
   const { id } = req.params;
 
   try {
+    const user = await User.findById(id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ message: "Usuario no encontrado", success: false });
+    }
+
     const deletedUser = await User.findByIdAndDelete(id);
 
     res.json({
       deletedUser,
+      message: "Usuario eliminado exitosamente",
+      success: true,
     });
   } catch (error) {
-    console.error("Error al buscar usuario:", error);
+    console.error("Error al eliminar usuario:", error);
     res.status(500).json({
-      message: "Ocurrió un error al buscar el usuario",
+      message: "Ocurrió un error al eliminar el usuario",
       success: false,
+      error: error.message,
+    });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        firstname: req?.body?.firstname,
+        lastname: req?.body?.lastname,
+        email: req?.body?.email,
+        mobile: req?.body?.mobile,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedUser) {
+      return res
+        .status(404)
+        .json({ message: "Usuario no encontrado", success: false });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).json({
+      message: "Ocurrió un error al actualizar el usuario",
+      success: false,
+      error: error.message,
     });
   }
 };
@@ -118,4 +161,5 @@ module.exports = {
   getAllUsers,
   getUser,
   deleteUser,
+  updateUser,
 };
