@@ -77,14 +77,36 @@ const getUser = async (req, res) => {
   try {
     const user = await User.findById(id);
 
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario no encontrado",
+        success: false,
+      });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error("Error al buscar usuario:", error);
+    res.status(500).json({
+      message: "Ocurrió un error al buscar el usuario",
+      success: false,
+    });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deletedUser = await User.findByIdAndDelete(id);
+
     res.json({
-      user: user,
+      deletedUser,
     });
   } catch (error) {
-    console.error("Error al iniciar sesión:", error);
-
-    return res.status(500).json({
-      message: "Ocurrió un error al iniciar sesión",
+    console.error("Error al buscar usuario:", error);
+    res.status(500).json({
+      message: "Ocurrió un error al buscar el usuario",
       success: false,
     });
   }
@@ -95,4 +117,5 @@ module.exports = {
   loginUser,
   getAllUsers,
   getUser,
+  deleteUser,
 };
