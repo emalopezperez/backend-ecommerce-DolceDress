@@ -64,9 +64,29 @@ const loginUser = async (req, res) => {
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find();
+
     res.json(users);
   } catch (error) {
     throw new Error(error);
+  }
+};
+
+const getUser = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const user = await User.findById(id);
+
+    res.json({
+      user: user,
+    });
+  } catch (error) {
+    console.error("Error al iniciar sesión:", error);
+
+    return res.status(500).json({
+      message: "Ocurrió un error al iniciar sesión",
+      success: false,
+    });
   }
 };
 
@@ -74,4 +94,5 @@ module.exports = {
   createUser,
   loginUser,
   getAllUsers,
+  getUser,
 };
