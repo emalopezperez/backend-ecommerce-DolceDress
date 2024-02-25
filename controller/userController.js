@@ -1,5 +1,7 @@
 const User = require("../models/userModel");
 const { generateToken } = require("../config/jwtToken");
+const { generateRefreshToken } = require("../config/refreshToken");
+const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   try {
@@ -37,6 +39,20 @@ const loginUser = async (req, res) => {
     const findUser = await User.findOne({ email });
 
     if (findUser && (await findUser.isPasswordMatched(password))) {
+      const refreshToken = await generateRefreshToken(findUser?._id);
+
+      const updateuser = await User.findByIdAndUpdate(
+        findUser.id,
+        {
+          refreshToken: refreshToken,
+        },
+        { new: true }
+      );
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        maxAge: 72 * 60 * 60 * 1000,
+      });
+
       return res.json({
         _id: findUser._id,
         firstname: findUser.firstname,
@@ -58,6 +74,28 @@ const loginUser = async (req, res) => {
       message: "Ocurrió un error al iniciar sesión",
       success: false,
     });
+  }
+};
+
+const logout = async (req, res) => {};
+
+const handleRefreshToken = async (req, res) => {
+  try {
+    const cookie = req.cookies;
+    if (!cookie?.refreshToken) throw new Error("No Refresh Token in Cookies");
+    const refreshToken = cookie.refreshToken;
+    const user = await User.findOne({ refreshToken });
+    if (!user)
+      throw new Error(" No Refresh token present in db or not matched");
+    jwt.verify(refreshToken, process.env.JWT_SECRET, (err, decoded) => {
+      if (err || user.id !== decoded.id) {
+        throw new Error("There is something wrong with refresh token");
+      }
+      const accessToken = generateToken(user?._id);
+      res.json({ accessToken });
+    });
+  } catch (error) {
+    console.log(error);
   }
 };
 
@@ -158,8 +196,10 @@ const updateUser = async (req, res) => {
 module.exports = {
   createUser,
   loginUser,
+  logout,
   getAllUsers,
   getUser,
   deleteUser,
   updateUser,
+  handleRefreshToken,
 };
