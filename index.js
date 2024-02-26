@@ -7,6 +7,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 
 const authRouter = require("./routes/authRoute");
+const productRouter = require("./routes/productRuote");
 const PORT = process.env.PORT;
 
 connection();
@@ -18,6 +19,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use("/api/user", authRouter);
+app.use("/api/product", productRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running  at PORT ${PORT}`);
