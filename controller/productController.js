@@ -90,7 +90,28 @@ const updateProduct = async (req, res) => {
         .json({ message: "Producto no encontrado", success: false });
     }
 
-    res.json(updatedProduct);
+    res.status(200).json({
+      success: true,
+      updatedProduct,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const deleteProduct = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const deleteProduct = await Product.findByIdAndDelete(id);
+
+    res.status(200).json({
+      success: true,
+      deleteProduct,
+    });
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -104,4 +125,5 @@ module.exports = {
   getProduct,
   getAllProducts,
   updateProduct,
+  deleteProduct,
 };
