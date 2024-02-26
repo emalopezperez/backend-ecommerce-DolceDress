@@ -77,7 +77,41 @@ const loginUser = async (req, res) => {
   }
 };
 
-const logout = async (req, res) => {};
+const logout = async (req, res) => {
+  try {
+    const refreshToken = req.cookies?.refreshToken;
+    if (!refreshToken) {
+      throw new Error("No Refresh Token in Cookies");
+    }
+
+    const user = await User.findOne({ refreshToken });
+    if (!user) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true,
+      });
+      return res.sendStatus(204);
+    }
+
+    await User.findOneAndUpdate(
+      { refreshToken: refreshToken },
+      { refreshToken: "" }
+    );
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+    });
+
+    res.sendStatus(204);
+  } catch (error) {
+    console.error("Error al cerrar sesión:", error);
+    res.status(500).json({
+      message: "Ocurrió un error al cerrar sesión",
+      success: false,
+    });
+  }
+};
 
 const handleRefreshToken = async (req, res) => {
   try {
