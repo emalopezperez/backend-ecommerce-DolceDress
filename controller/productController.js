@@ -58,8 +58,50 @@ const getAllProducts = async (req, res) => {
   }
 };
 
+const updateProduct = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const updatedProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        title: req?.body?.title,
+        slug: req?.body?.slug,
+        description: req?.body?.description,
+        price: req?.body?.price,
+        category: req?.body?.category,
+        brand: req?.body?.brand,
+        quantity: req?.body?.quantity,
+        sold: req?.body?.sold,
+        images: req?.body?.images,
+        color: req?.body?.color,
+        tags: req?.body?.tags,
+        ratings: req?.body?.ratings,
+        totalrating: req?.body?.totalrating,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!updatedProduct) {
+      return res
+        .status(404)
+        .json({ message: "Producto no encontrado", success: false });
+    }
+
+    res.json(updatedProduct);
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createProduct,
   getProduct,
   getAllProducts,
+  updateProduct,
 };
