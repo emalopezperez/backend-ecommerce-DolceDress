@@ -17,6 +17,33 @@ const createProduct = async (req, res) => {
   }
 };
 
+const getProduct = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Producto no encontrado",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Producto encontrado",
+      product,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Error al recuperar el producto",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createProduct,
+  getProduct,
 };
