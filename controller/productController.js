@@ -1,7 +1,12 @@
 const Product = require("../models/productModel");
+const slugify = require("slugify");
 
 const createProduct = async (req, res) => {
   try {
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title);
+    }
+
     const newProduct = await Product.create(req.body);
     res.status(201).json({
       success: true,
@@ -20,7 +25,7 @@ const createProduct = async (req, res) => {
 const getProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const product = await Product.findById(id);
+    const product = await Product.findById({});
 
     if (!product) {
       return res.status(404).json({
@@ -44,10 +49,44 @@ const getProduct = async (req, res) => {
 
 const getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find();
+    const queryObj = { ...req.query };
+    const excludeFields = ["page", "sort", "limit", "fields"];
+    excludeFields.forEach((el) => delete queryObj[el]);
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    let query = Product.find(JSON.parse(queryStr));
+
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(",").join(" ");
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort("-createdAt");
+    }
+
+    if (req.query.fields) {
+      const fields = req.query.fields.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+    const page = req.query.page || 1;
+    const limit = req.query.limit || 10;
+    const skip = (page - 1) * limit;
+    query = query.skip(skip).limit(limit);
+
+    const products = await query;
+
+    const productCount = await Product.countDocuments();
+
+    if (skip >= productCount && page !== 1) {
+      throw new Error("Esta página no existe");
+    }
 
     res.status(200).json({
       success: true,
+      count: products.length,
       products,
     });
   } catch (error) {
@@ -62,26 +101,14 @@ const updateProduct = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const updatedProduct = await Product.findByIdAndUpdate(
-      id,
-      {
-        title: req?.body?.title,
-        slug: req?.body?.slug,
-        description: req?.body?.description,
-        price: req?.body?.price,
-        category: req?.body?.category,
-        brand: req?.body?.brand,
-        quantity: req?.body?.quantity,
-        sold: req?.body?.sold,
-        images: req?.body?.images,
-        color: req?.body?.color,
-        tags: req?.body?.tags,
-        ratings: req?.body?.ratings,
-        totalrating: req?.body?.totalrating,
-      },
-      {
-        new: true,
-      }
+    if (req.body.title) {
+      req.body.slug = slugify(req.body.title);
+    }
+
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: id },
+      req.body,
+      { new: true }
     );
 
     if (!updatedProduct) {
