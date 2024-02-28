@@ -227,6 +227,29 @@ const updateUser = async (req, res) => {
   }
 };
 
+const updatePassword = async (req, res) => {
+  try {
+    const { _id } = req.user;
+    const { password } = req.body;
+
+    const user = await User.findById(_id);
+    if (password) {
+      user.password = password;
+      const updatedPassword = await user.save();
+      res.json(updatedPassword);
+    } else {
+      res.json(user);
+    }
+  } catch (error) {
+    console.error("Error al actualizar usuario:", error);
+    res.status(500).json({
+      message: "Ocurrió un error al actualizar el usuario",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
@@ -236,4 +259,5 @@ module.exports = {
   deleteUser,
   updateUser,
   handleRefreshToken,
+  updatePassword,
 };
