@@ -1,6 +1,8 @@
 const User = require("../models/userModel");
+const sendEmail = require("../controller/emailController");
 const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
+
 const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
@@ -241,9 +243,46 @@ const updatePassword = async (req, res) => {
       res.json(user);
     }
   } catch (error) {
-    console.error("Error al actualizar usuario:", error);
+    console.error("Error al actualizar password", error);
     res.status(500).json({
-      message: "Ocurrió un error al actualizar el usuario",
+      message: "Ocurrió un error al actualizar el password",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return res.status(400).json({
+      message: "No se encontró usuario",
+      success: false,
+    });
+  }
+
+  try {
+    const token = await user.createPasswordResetToken();
+    await user.save();
+
+    const resetURL = `Hi, Please follow this link to reset Your Password. This link is valid till 10 minutes from now. <a href='http://localhost:3000/api/user/forgot-password/${token}'>Click Here</a>`;
+
+    const data = {
+      to: email,
+      text: "Hey User",
+      subject: "Forgot Password Link",
+      html: resetURL,
+    };
+
+    await sendEmail(data);
+
+    res.json(token);
+  } catch (error) {
+    console.error("Error al querer forgot password", error);
+    res.status(500).json({
+      message: "Ocurrió un error al querer forgot password",
       success: false,
       error: error.message,
     });
@@ -260,4 +299,5 @@ module.exports = {
   updateUser,
   handleRefreshToken,
   updatePassword,
+  forgotPassword,
 };
