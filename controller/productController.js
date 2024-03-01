@@ -25,7 +25,7 @@ const createProduct = async (req, res) => {
 const getProduct = async (req, res) => {
   const { id } = req.params;
   try {
-    const product = await Product.findById({});
+    const product = await Product.findById(id);
 
     if (!product) {
       return res.status(404).json({

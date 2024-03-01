@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post("/create-product", authMiddleware, isAdmin, product.createProduct);
 router.get("/get-products", product.getAllProducts);
-router.get("/:id", product.getProduct);
+router.get("/get-product/:id", product.getProduct);
 router.put(
   "/update-product/:id",
   authMiddleware,

@@ -8,6 +8,7 @@ const cookieParser = require("cookie-parser");
 
 const authRouter = require("./routes/authRoute");
 const productRouter = require("./routes/productRuote");
+const blogRouter = require("./routes/blogRoute");
 const PORT = process.env.PORT;
 
 connection();
@@ -20,6 +21,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use("/api/user", authRouter);
 app.use("/api/product", productRouter);
+app.use("/api/blog", blogRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running  at PORT ${PORT}`);
