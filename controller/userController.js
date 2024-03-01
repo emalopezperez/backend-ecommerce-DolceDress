@@ -4,6 +4,7 @@ const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
 
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const createUser = async (req, res) => {
   try {
@@ -289,6 +290,33 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  const { password } = req.body;
+  const { token } = req.params;
+
+  try {
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await User.findOne({
+      passwordResetToken: hashedToken,
+      passwordResetExpires: { $gt: Date.now() },
+    });
+
+    if (!user) throw new Error(" Token Expired, Please try again later");
+    user.password = password;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    console.error("Error al querer reset password", error);
+    res.status(500).json({
+      message: "Ocurrió un error al querer reset password",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
@@ -300,4 +328,5 @@ module.exports = {
   handleRefreshToken,
   updatePassword,
   forgotPassword,
+  resetPassword,
 };
