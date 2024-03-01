@@ -85,8 +85,103 @@ const updateBlog = async (req, res) => {
     });
     res.json(updateBlog);
   } catch (error) {
-    throw new Error(error);
+    console.error("Error :", error);
+    res.status(500).json({ message: "An error occurred while update blog" });
   }
 };
 
-module.exports = { createBlog, getBlog, getAllBlogs, deleteBlog, updateBlog };
+const likeBlog = async (req, res) => {
+  const { blogId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    const isLiked = blog.likes.includes(userId);
+    const isDisliked = blog.dislikes.includes(userId);
+
+    if (isDisliked) {
+      await Blog.findByIdAndUpdate(blogId, {
+        $pull: { dislikes: userId },
+        isDisliked: false,
+      });
+    }
+
+    if (isLiked) {
+      await Blog.findByIdAndUpdate(blogId, {
+        $pull: { likes: userId },
+        isLiked: false,
+      });
+    } else {
+      await Blog.findByIdAndUpdate(blogId, {
+        $push: { likes: userId },
+        isLiked: true,
+      });
+    }
+
+    const updatedBlog = await Blog.findById(blogId);
+    res.json(updatedBlog);
+  } catch (error) {
+    console.error("Error liking blog:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while liking the blog" });
+  }
+};
+
+const dislikeBlog = async (req, res) => {
+  const { blogId } = req.body;
+  const userId = req.user._id;
+
+  try {
+    const blog = await Blog.findById(blogId);
+
+    if (!blog) {
+      return res.status(404).json({ message: "Blog not found" });
+    }
+
+    const isLiked = blog.likes.includes(userId);
+    const isDisliked = blog.dislikes.includes(userId);
+
+    if (isLiked) {
+      await Blog.findByIdAndUpdate(blogId, {
+        $pull: { likes: userId },
+        isLiked: false,
+      });
+    }
+
+    if (isDisliked) {
+      await Blog.findByIdAndUpdate(blogId, {
+        $pull: { dislikes: userId },
+        isDisliked: false,
+      });
+    } else {
+      await Blog.findByIdAndUpdate(blogId, {
+        $push: { dislikes: userId },
+        isDisliked: true,
+      });
+    }
+
+    const updatedBlog = await Blog.findById(blogId);
+    res.json(updatedBlog);
+  } catch (error) {
+    console.error("Error disliking blog:", error);
+    res
+      .status(500)
+      .json({ message: "An error occurred while disliking the blog" });
+  }
+};
+
+module.exports = {
+  createBlog,
+  getBlog,
+  getAllBlogs,
+  deleteBlog,
+  updateBlog,
+  likeBlog,
+  dislikeBlog,
+};
