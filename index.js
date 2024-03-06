@@ -9,6 +9,7 @@ const cookieParser = require("cookie-parser");
 const authRouter = require("./routes/authRoute");
 const productRouter = require("./routes/productRuote");
 const blogRouter = require("./routes/blogRoute");
+const categoryProductRouter = require("./routes/categoryProduct");
 const PORT = process.env.PORT;
 
 connection();
@@ -21,6 +22,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use("/api/user", authRouter);
 app.use("/api/product", productRouter);
+app.use("/api/category-product", categoryProductRouter);
 app.use("/api/blog", blogRouter);
 
 app.listen(PORT, () => {
