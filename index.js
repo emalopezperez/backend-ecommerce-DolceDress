@@ -11,6 +11,7 @@ const productRouter = require("./routes/productRuote");
 const blogRouter = require("./routes/blogRoute");
 const categoryProductRouter = require("./routes/categoryProduct");
 const categorBlogRouter = require("./routes/categoryBlog");
+const brandRouter = require("./routes/brandRoute");
 
 const PORT = process.env.PORT;
 
@@ -26,6 +27,7 @@ app.use("/api/user", authRouter);
 app.use("/api/product", productRouter);
 app.use("/api/category-product", categoryProductRouter);
 app.use("/api/category-blog", categorBlogRouter);
+app.use("/api/brand", brandRouter);
 app.use("/api/blog", blogRouter);
 
 app.listen(PORT, () => {
