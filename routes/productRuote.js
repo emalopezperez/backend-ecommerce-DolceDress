@@ -22,5 +22,6 @@ router.delete(
 );
 
 router.put("/wishlist", authMiddleware, product.addToWishlist);
+router.put("/rating", authMiddleware, product.rating);
 
 module.exports = router;
