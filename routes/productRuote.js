@@ -21,4 +21,6 @@ router.delete(
   product.deleteProduct
 );
 
+router.put("/wishlist", authMiddleware, product.addToWishlist);
+
 module.exports = router;
