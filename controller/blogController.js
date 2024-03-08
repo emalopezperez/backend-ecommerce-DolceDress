@@ -1,5 +1,9 @@
 const Blog = require("../models/blogModel.js");
 const User = require("../models/userModel.js");
+const {
+  cloudinaryUploadImg,
+  cloudinaryDeleteImg,
+} = require("../utils/cloudinary");
 
 const createBlog = async (req, res, next) => {
   try {
@@ -176,6 +180,44 @@ const dislikeBlog = async (req, res) => {
   }
 };
 
+const uploadImages = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const uploader = (path) => cloudinaryUploadImg(path, "images");
+    const urls = [];
+    const files = req.files;
+    for (const file of files) {
+      const { path } = file;
+      const newpath = await uploader(path);
+      urls.push(newpath);
+
+      try {
+        fs.unlinkSync(path);
+        console.log("File removed");
+      } catch (err) {
+        console.error("Something wrong happened removing the file", err);
+      }
+    }
+    const findBlog = await Blog.findByIdAndUpdate(
+      id,
+      {
+        images: urls.map((file) => {
+          return file;
+        }),
+      },
+
+      {
+        new: true,
+      }
+    );
+
+    res.json(findBlog);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   createBlog,
   getBlog,
@@ -184,4 +226,5 @@ module.exports = {
   updateBlog,
   likeBlog,
   dislikeBlog,
+  uploadImages,
 };

@@ -1,6 +1,11 @@
 const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const slugify = require("slugify");
+const fs = require("fs");
+const {
+  cloudinaryUploadImg,
+  cloudinaryDeleteImg,
+} = require("../utils/cloudinary");
 
 const createProduct = async (req, res) => {
   try {
@@ -248,6 +253,45 @@ const rating = async (req, res) => {
   }
 };
 
+const uploadImages = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const uploader = (path) => cloudinaryUploadImg(path, "images");
+    const urls = [];
+
+    const files = req.files;
+    for (const file of files) {
+      const { path } = file;
+      const newpath = await uploader(path);
+      urls.push(newpath);
+
+      try {
+        fs.unlinkSync(path);
+        console.log("File removed");
+      } catch (err) {
+        console.error("Something wrong happened removing the file", err);
+      }
+    }
+
+    const findProduct = await Product.findByIdAndUpdate(
+      id,
+      {
+        images: urls.map((file) => {
+          return file;
+        }),
+      },
+
+      {
+        new: true,
+      }
+    );
+
+    res.json(findProduct);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   createProduct,
   getProduct,
@@ -256,4 +300,5 @@ module.exports = {
   deleteProduct,
   addToWishlist,
   rating,
+  uploadImages,
 };
