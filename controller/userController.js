@@ -1,4 +1,6 @@
 const User = require("../models/userModel");
+const Cart = require("../models/cartModel");
+const Product = require("../models/productModel");
 const sendEmail = require("../controller/emailController");
 const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
@@ -370,6 +372,106 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const getWishlist = async (req, res) => {
+  const { _id } = req.user;
+
+  try {
+    const findUser = await User.findById(_id).populate("wishlist");
+
+    res.status(201).json({
+      success: true,
+      message: "Successfully",
+      findUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Ocurrió un error",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const saveAddress = async (req, res) => {
+  const { _id } = req.user;
+
+  try {
+    const addresUser = await User.findByIdAndUpdate(
+      _id,
+      {
+        address: req?.body?.address,
+      },
+      {
+        new: true,
+      }
+    );
+
+    res.status(201).json({
+      success: true,
+      message: "Save address successfully",
+      addresUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Ocurrió un error",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const userCart = async (req, res) => {
+  const { cart } = req.body;
+  const { _id } = req.user;
+
+  try {
+    let products = [];
+    const user = await User.findById(_id);
+
+    const alreadyExistCart = await Cart.findOne({ orderby: user._id });
+
+    if (alreadyExistCart) {
+      await alreadyExistCart.deleteOne();
+    }
+
+    await Promise.all(
+      cart.map(async (cartItem) => {
+        const object = {
+          product: cartItem._id,
+          count: cartItem.count,
+          color: cartItem.color,
+        };
+
+        const getPrice = await Product.findById(cartItem._id)
+          .select("price")
+          .exec();
+        object.price = getPrice.price;
+
+        products.push(object);
+      })
+    );
+
+    let cartTotal = products.reduce(
+      (total, product) => total + product.price * product.count,
+      0
+    );
+
+    const newCart = await new Cart({
+      products,
+      cartTotal,
+      orderby: user?._id,
+    }).save();
+
+    res.json(newCart);
+  } catch (error) {
+    res.status(500).json({
+      message: "Ocurrió un error",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
@@ -383,4 +485,7 @@ module.exports = {
   updatePassword,
   forgotPassword,
   resetPassword,
+  getWishlist,
+  saveAddress,
+  userCart,
 };
