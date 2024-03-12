@@ -472,6 +472,39 @@ const userCart = async (req, res) => {
   }
 };
 
+const getUserCart = async (req, res) => {
+  const { _id } = req.user;
+
+  try {
+    const cart = await Cart.findOne({ orderby: _id }).populate(
+      "products.product"
+    );
+
+    res.json({
+      message: "User's cart retrieved successfully",
+      success: true,
+      cart,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error retrieving user's cart",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const emptyCart = async (req, res) => {
+  const { _id } = req.user;
+  try {
+    const user = await User.findOne({ _id });
+    const cart = await Cart.findOneAndDelete({ orderby: user._id });
+    res.json(cart);
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
 module.exports = {
   createUser,
   loginUser,
@@ -488,4 +521,6 @@ module.exports = {
   getWishlist,
   saveAddress,
   userCart,
+  getUserCart,
+  emptyCart,
 };
