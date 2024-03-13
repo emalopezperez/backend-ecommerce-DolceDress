@@ -10,6 +10,7 @@ router.post("/admin-login", user.loginAdmin);
 router.post("/forgot-password", authMiddleware, user.forgotPassword);
 router.post("/save-address", authMiddleware, user.saveAddress);
 router.post("/cart", authMiddleware, user.userCart);
+router.post("/apply-coupon", authMiddleware, user.applyCoupon);
 
 router.put("/password", authMiddleware, user.updatePassword);
 router.put("/reset-password/:token", user.resetPassword);

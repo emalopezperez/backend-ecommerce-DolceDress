@@ -1,6 +1,7 @@
 const User = require("../models/userModel");
 const Cart = require("../models/cartModel");
 const Product = require("../models/productModel");
+const Coupon = require("../models/cuponModel");
 const sendEmail = require("../controller/emailController");
 const { generateToken } = require("../config/jwtToken");
 const { generateRefreshToken } = require("../config/refreshToken");
@@ -499,9 +500,62 @@ const emptyCart = async (req, res) => {
   try {
     const user = await User.findOne({ _id });
     const cart = await Cart.findOneAndDelete({ orderby: user._id });
-    res.json(cart);
+
+    res.json({
+      message: "Successfully",
+      success: true,
+      cart,
+    });
   } catch (error) {
-    throw new Error(error);
+    res.status(500).json({
+      message: "Error retrieving user's cart",
+      success: false,
+      error: error.message,
+    });
+  }
+};
+
+const applyCoupon = async (req, res) => {
+  const { coupon } = req.body;
+  const { _id } = req.user;
+
+  try {
+    const validateCoupon = await Coupon.findOne({ name: coupon });
+    const user = await User.findOne({ _id });
+
+    if (validateCoupon === null) {
+      return res.status(400).json({
+        message: "Cupon no valido",
+        success: false,
+      });
+    }
+
+    let { cartTotal } = await Cart.findOne({
+      orderby: user._id,
+    }).populate("products.product");
+
+    let totalAfterDiscount = (
+      cartTotal -
+      (cartTotal * validateCoupon.discount) / 100
+    ).toFixed(2);
+
+    await Cart.findOneAndUpdate(
+      { orderby: user._id },
+      { totalAfterDiscount },
+      { new: true }
+    );
+
+    res.json({
+      success: true,
+      message: "Cupón aplicado con éxito",
+      totalAfterDiscount,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error al aplicar el cupón",
+      success: false,
+      error: error.message,
+    });
   }
 };
 
@@ -523,4 +577,5 @@ module.exports = {
   userCart,
   getUserCart,
   emptyCart,
+  applyCoupon,
 };
